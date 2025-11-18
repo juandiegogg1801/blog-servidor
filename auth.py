@@ -44,7 +44,13 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), request: Reque
     return {"access_token": access_token, "token_type": "bearer", "user_type": user.type}
 
 @router.post("/logout")
-async def logout(request: Request, username: str):
+async def logout(request: Request, username: str = None):
+    if request.method == "POST":
+        try:
+            data = await request.json()
+            username = data.get("username", username)
+        except Exception:
+            pass
     ip = request.client.host if request else "unknown"
     log_event(username, "logout", ip)
     return {"msg": "Sesión cerrada"}
