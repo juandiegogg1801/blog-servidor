@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import User, Post, get_password_hash, verify_password_requirements
@@ -32,19 +33,26 @@ def get_current_user(token: str = None, db: Session = Depends(get_db)):
 
 
 # --- Usuarios (solo admin) ---
+
+# Modelo para crear usuario
+class UserCreateRequest(BaseModel):
+	username: str
+	password: str
+	type: str = "usuario"
+
 @router.post("/users/create")
-def create_user(username: str, password: str, type: str = "usuario", token: str = None, request: Request = None, db: Session = Depends(get_db)):
+def create_user(user_req: UserCreateRequest, token: str = None, request: Request = None, db: Session = Depends(get_db)):
 	current = get_current_user(token, db)
 	if current.type != "admin":
 		raise HTTPException(status_code=403, detail="Solo el admin puede crear usuarios")
-	if not verify_password_requirements(password):
+	if not verify_password_requirements(user_req.password):
 		raise HTTPException(status_code=400, detail="La contraseña no cumple los requisitos")
-	if db.query(User).filter(User.username == username).first():
+	if db.query(User).filter(User.username == user_req.username).first():
 		raise HTTPException(status_code=400, detail="El usuario ya existe")
-	user = User(username=username, password_hash=get_password_hash(password), type=type)
+	user = User(username=user_req.username, password_hash=get_password_hash(user_req.password), type=user_req.type)
 	db.add(user)
 	db.commit()
-	log_event(current.username, f"create_user:{username}", request.client.host if request else "unknown")
+	log_event(current.username, f"create_user:{user_req.username}", request.client.host if request else "unknown")
 	return {"msg": "Usuario creado"}
 
 @router.get("/users/list")
