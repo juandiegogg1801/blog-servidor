@@ -25,3 +25,4 @@
 ## Notas
 - El usuario admin se crea automáticamente al iniciar el servidor.
 - Cambia la IP en el cliente para conectarse desde otra máquina.
+- el usuario del administrador  inicial es: "admin" y la contraseña: "Admin123!"
