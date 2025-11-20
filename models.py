@@ -8,8 +8,8 @@ Base = declarative_base()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def verify_password_requirements(password: str) -> bool:
-	# Mínimo 8 caracteres, mayúsculas, minúsculas, números y especiales
-	if len(password) < 8:
+	# Mínimo 8 caracteres, máximo 72, mayúsculas, minúsculas, números y especiales
+	if len(password) < 8 or len(password) > 72:
 		return False
 	if not re.search(r"[A-Z]", password):
 		return False
@@ -22,7 +22,7 @@ def verify_password_requirements(password: str) -> bool:
 	return True
 
 def get_password_hash(password):
-	return pwd_context.hash(password)
+	return pwd_context.hash(password[:72])
 
 class User(Base):
 	__tablename__ = "users"
